@@ -77,7 +77,7 @@ public final class LuceneSearchPanel extends SearchPanel {
     private void showResults(List<Long> emailIds) {
         EmailDataset dataset = getDataset();
         var repo = new EmailRepository(dataset);
-        int resultCount = EmailDatasetBrowser.getPreferences().getInt(SimpleBrowsePanel.PREF_BROWSE_PAGE_SIZE, Integer.MAX_VALUE);
+        int resultCount = EmailDatasetBrowser.getPreferences().getInt(SimpleBrowsePanel.PREF_BROWSE_PAGE_SIZE, 50000);
         List<EmailTreeNode> nodes = emailIds.stream()
                 .map(id -> repo.findPreviewById(id).orElse(null))
                 .filter(Objects::nonNull)

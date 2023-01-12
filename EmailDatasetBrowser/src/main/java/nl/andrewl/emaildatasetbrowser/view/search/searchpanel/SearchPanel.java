@@ -51,7 +51,7 @@ public abstract class SearchPanel extends JPanel implements DatasetChangeListene
     }
 
     protected int getPageSize() {
-        return EmailDatasetBrowser.getPreferences().getInt(PREF_BROWSE_PAGE_SIZE, Integer.MAX_VALUE);
+        return EmailDatasetBrowser.getPreferences().getInt(PREF_BROWSE_PAGE_SIZE, 50000);
     }
 
     public void setDataset(EmailDataset dataset) {
