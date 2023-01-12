@@ -5,7 +5,7 @@ def text_preproccessing():
 def feature_generation():
     raise NotImplementedError
 
-def ml_classifiers():
+def apply_classifiers():
     raise NotImplementedError
 
 def plot_results():
