@@ -4,6 +4,7 @@ import nl.andrewl.email_indexer.data.EmailDataset;
 import nl.andrewl.email_indexer.data.EmailEntry;
 import nl.andrewl.email_indexer.data.Tag;
 import nl.andrewl.email_indexer.data.TagRepository;
+import nl.andrewl.emaildatasetbrowser.EmailDatasetBrowser;
 import nl.andrewl.emaildatasetbrowser.view.DatasetChangeListener;
 import nl.andrewl.emaildatasetbrowser.view.tag.TagEditDialog;
 
@@ -17,6 +18,9 @@ import java.awt.event.MouseEvent;
  * shows the list of tags, and provides facilities to modify that list.
  */
 public class TagPanel extends JPanel implements EmailViewListener, DatasetChangeListener {
+
+	public static String PREF_AUTO_TAG_AUTHOR = "pref_auto_tag_enabled";
+	public static String PREF_AUTO_TAG_ID = "pref_auto_tag_id";
 	private final EmailViewPanel parent;
 	private final DefaultListModel<Tag> tagListModel = new DefaultListModel<>();
 	private final DefaultListModel<Tag> parentTagListModel = new DefaultListModel<>();
@@ -148,7 +152,19 @@ public class TagPanel extends JPanel implements EmailViewListener, DatasetChange
 	private void onTagSelected(JComboBox<Tag> tagComboBox) {
 		Tag tag = (Tag) tagComboBox.getSelectedItem();
 		if (tag == null) return;
-		new TagRepository(parent.getCurrentDataset()).addTag(email.id(), tag.id());
+		TagRepository tp = new TagRepository(parent.getCurrentDataset());
+
+		// Add the selected tag
+		tp.addTag(email.id(), tag.id());
+
+		// Add automatic tagging
+		if (EmailDatasetBrowser.getPreferences().getBoolean(PREF_AUTO_TAG_AUTHOR, false)) {
+			int authorTagId = EmailDatasetBrowser.getPreferences().getInt(PREF_AUTO_TAG_ID, -1);
+			if (authorTagId >= 0) {
+				tp.addTag(email.id(), authorTagId);
+			}
+		}
+
 		refreshTags();
 	}
 

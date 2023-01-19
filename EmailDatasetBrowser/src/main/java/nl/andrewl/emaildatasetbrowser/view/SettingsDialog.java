@@ -12,6 +12,7 @@ import java.util.prefs.Preferences;
 
 import nl.andrewl.emaildatasetbrowser.EmailDatasetBrowser;
 import nl.andrewl.emaildatasetbrowser.view.email.EmailBodyPanel;
+import nl.andrewl.emaildatasetbrowser.view.email.TagPanel;
 import nl.andrewl.emaildatasetbrowser.view.search.EmailTreeSelectionListener;
 import nl.andrewl.emaildatasetbrowser.view.search.searchpanel.SimpleBrowsePanel;
 
@@ -30,7 +31,7 @@ public class SettingsDialog extends JDialog {
         // settings. Currently, they're expected to take care of this themselves, which
         // is unreliable.
 
-        JPanel p = new JPanel(new GridLayout(4, 1));
+        JPanel p = new JPanel(new GridLayout(6, 1));
         p.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         p.add(buildSettingsCheckbox(EmailDatasetBrowser.PREF_LOAD_LAST_DS, false,
@@ -39,13 +40,18 @@ public class SettingsDialog extends JDialog {
         p.add(buildSettingsCheckbox(EmailTreeSelectionListener.PREF_AUTO_OPEN, true,
                 "Automatically expand email in tree-view"));
 
-        p.add(buildSettingsSpinner(SimpleBrowsePanel.PREF_BROWSE_PAGE_SIZE, 20, 1, 50000, 1, "Browse page size"));
+        p.add(buildSettingsSpinner(SimpleBrowsePanel.PREF_BROWSE_PAGE_SIZE, 20, 1, 1000000, 1, "Browse page size"));
 
         p.add(buildSettingsSpinner(EmailBodyPanel.PREF_SCROLL_SPEED, 100, 1, 200, 1, "Email body scroll speed"));
 
+        p.add(buildSettingsCheckbox(TagPanel.PREF_AUTO_TAG_AUTHOR, false,
+                "Automatically add the author tag."));
+        p.add(buildSettingsSpinner(TagPanel.PREF_AUTO_TAG_ID, 0, 0, 99999, 1,
+                "The tag ID of tag used for the previous setting."));
+
         setContentPane(p);
 
-        setPreferredSize(new Dimension(475, 200));
+        setPreferredSize(new Dimension(475, 275));
         pack();
         setLocationRelativeTo(browser);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
