@@ -10,25 +10,24 @@ from sklearn.utils import resample
 # todo: find way that br removal doesn't glue two words together
 from bs4 import BeautifulSoup
 
+label_hierarchy = ["technology", "process", "property", "existence", "not-ak"]
 
-def tag_preprocess(tag):
-    if tag in ["process", "technology"]:
-        return "executive"
 
-    if tag in ["executive-behavioral", "existence-structural"]:
-        return "existence"
+def get_highest_tag(tags):
+    for label in label_hierarchy:
+        if label in tags:
+            if label == "technology" or label == "process":
+                return "executive"
+            return label
 
-    return tag
+    raise Exception("Invalid tag: nog in hierarchy")
 
 
 def preprocess(raw: pd.DataFrame):
-    hierarchy = ["executive", "property", "existence", "not-ak"]
-
     ret = raw[["SUBJECT", "BODY", "TAGS"]]
     ret["CONTENT"] = ret["SUBJECT"] + " " + ret["BODY"].transform(lambda x: BeautifulSoup(x).get_text())
 
-    # todo: apply hierarchy, currently just returns first tag
-    ret["LABEL"] = ret["TAGS"].transform(lambda x: x[1:-1].split(", ")[0])
+    ret["LABEL"] = ret["TAGS"].transform(lambda x: get_highest_tag(x[1:-1].split(", ")))
 
     return ret[["CONTENT", "LABEL"]]
 
@@ -72,6 +71,9 @@ def batch_train(features, labels, initial_size, increase_step, subset_count, tes
     """
 
     x, x_test, y, y_true = train_test_split(features, labels, test_size=test_size)
+
+    print(f"Test set:\n{y_true}")
+
     columns = ["training size", "precision", "recall", "f1"]
     rows = []
 
@@ -91,7 +93,11 @@ def debug(data):
     features, vocabulary = extract_features(preprocessed["CONTENT"])
     labels = preprocessed["LABEL"]
 
-    results = batch_train(features, labels, 10, 5, 10, 10)
+    initial_size = 10
+    increase_step = 10
+    subset_count = 5
+    test_size = 50
+    results = batch_train(features, labels, initial_size, increase_step, subset_count, test_size)
 
     print(results)
 
