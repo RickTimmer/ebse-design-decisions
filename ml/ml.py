@@ -10,6 +10,8 @@ from sklearn.utils import resample
 # todo: find way that br removal doesn't glue two words together
 from bs4 import BeautifulSoup
 
+from preprocessing import remove_embedded
+
 label_hierarchy = ["technology", "process", "property", "existence", "not-ak"]
 
 
@@ -25,7 +27,8 @@ def get_highest_tag(tags):
 
 def preprocess(raw: pd.DataFrame):
     ret = raw[["SUBJECT", "BODY", "TAGS"]]
-    ret["CONTENT"] = ret["SUBJECT"] + " " + ret["BODY"].transform(lambda x: BeautifulSoup(x).get_text())
+    ret["CONTENT"] = ret["SUBJECT"] + " " + ret["BODY"].transform(
+        lambda x: remove_embedded(BeautifulSoup(x).get_text()))
 
     ret["LABEL"] = ret["TAGS"].transform(lambda x: get_highest_tag(x[1:-1].split(", ")))
 
