@@ -123,7 +123,7 @@ def batch_train(features, labels, classifier, increase_step, kfold_splits):
 
     for i in range(subset_count):
         subset_size = initial_size + increase_step * i
-        if i == subset_count - 1:
+        if i == subset_count - 1 and leftover_size != 0:
             subset_size = subset_size + leftover_size - increase_step
         x_sub, y_sub = resample(features, labels, n_samples=subset_size)
         
@@ -168,7 +168,22 @@ def printClassifierLatex(classifiers, vectorizers):
                 f1=round(classifier[vectorizer["name"] + "f1"], 3)
             )
             print(template_string)
-    print("}\mydata")
+    print("}\classifiersdata")
+
+def printIterationLatex(results):
+    print("\pgfplotstableread[row sep=\\\\,col sep=&]{")
+    print("Size & Precision & Recall & F1-score \\\\")
+    
+    for row in results.iterrows():
+            template = Template("$size & $precision & $recall & $f1 \\\\")
+            template_string = template.substitute(
+                size=row[1]["training size"],
+                precision=row[1]["avg_precision"],
+                recall=row[1][2], # avg_recall not working?
+                f1=row[1]["avg_f1"]
+            )
+            print(template_string)
+    print("}\iterationdata")
 
 def debug(data):
     simplefilter("ignore")
@@ -178,7 +193,7 @@ def debug(data):
     features_count, _ = extract_features(preprocessed["CONTENT"], CountVectorizer())
     labels = preprocessed["LABEL"].to_numpy()
 
-    increase_step = 2400
+    increase_step = 100
     kfold_splits = 5
     vectorizers = [
         { "name": "Tfidf", "features": features_tfidf },
@@ -205,6 +220,8 @@ def debug(data):
             classifier[vectorizer["name"] + "precision"] = results.iloc[-1]["avg_precision"]
             classifier[vectorizer["name"] + "recall"] = results.iloc[-1][2] # "avg_recall" for some reason isn't working.
             classifier[vectorizer["name"] + "f1"] = results.iloc[-1]["avg_f1"]
+
+            printIterationLatex(results)
 
     printClassifierLatex(classifiers, vectorizers)
 
