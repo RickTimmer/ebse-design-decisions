@@ -15,9 +15,6 @@ reply_patterns = [
                "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec) \\d+, "
                "\\d+,? "
                "at \\d+:\\d+ (AM|PM),? .+ wrote:"),
-
-
-
     re.compile("On \\d+/\\d+/\\d+ \\d+:\\d+, .+ wrote:"),
     re.compile(".+ hat am \\d+\\.\\d+\\.\\d+ \\d+:\\d+ geschrieben:"),
     re.compile("From:[\\S\\s]*Date:[\\S\\s]*To:[\\S\\s]*Subject:", re.MULTILINE)
@@ -44,7 +41,7 @@ def remove_embedded(raw):
     if len(matches) > 0:
         start_of_chain = min(matches)  # get the first match in the text
         stripped = raw[: start_of_chain]
-        print(stripped + color_text(raw[start_of_chain:], red))
+        # print(stripped + color_text(raw[start_of_chain:], red))
         return stripped
 
     return raw
