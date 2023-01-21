@@ -4,6 +4,7 @@ import pandas as pd
 # todo: find way that br removal doesn't glue two words together
 from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import f1_score, precision_score, recall_score
 from sklearn.model_selection import KFold
 from sklearn.naive_bayes import ComplementNB
@@ -58,13 +59,21 @@ def preprocess(raw: pd.DataFrame):
     return ret[["CONTENT", "LABEL"]]
 
 
-def extract_features(corpus):
+def extract_features(corpus, vectorizer):
     """
     Perform feature extraction on a set of strings
     :param corpus: a set of strings, each will be transformed into a feature
     :return: set of features
     """
-    vectorizer = TfidfVectorizer()
+    X = vectorizer.fit_transform(corpus)
+    return X, vectorizer.get_feature_names_out()
+
+def extract_features2(corpus, vectorizer):
+    """
+    Perform feature extraction on a set of strings
+    :param corpus: a set of strings, each will be transformed into a feature
+    :return: set of features
+    """
     X = vectorizer.fit_transform(corpus)
     return X, vectorizer.get_feature_names_out()
 
@@ -146,29 +155,35 @@ def batch_train(features, labels, classifier, increase_step, kfold_splits):
 
 debug_ret = None
 
-def printClassifierLatex(classifiers):
+def printClassifierLatex(classifiers, vectorizers):
     print("\pgfplotstableread[row sep=\\\\,col sep=&]{")
     print("Classifier & Precision & Recall & F1-score \\\\")
     for classifier in classifiers:
-        template = Template("$classifier & $precision & $recall & $f1 \\\\")
-        template_string = template.substitute(
-            classifier=classifier["short_name"], 
-            precision=round(classifier["precision"], 3), 
-            recall=round(classifier["recall"], 3), 
-            f1=round(classifier["f1"], 3)
-        )
-        print(template_string)
+        for vectorizer in vectorizers:
+            template = Template("$classifier & $precision & $recall & $f1 \\\\")
+            template_string = template.substitute(
+                classifier=vectorizer["name"] + " " + classifier["short_name"], 
+                precision=round(classifier[vectorizer["name"] + "precision"], 3), 
+                recall=round(classifier[vectorizer["name"] + "recall"], 3), 
+                f1=round(classifier[vectorizer["name"] + "f1"], 3)
+            )
+            print(template_string)
     print("}\mydata")
 
 def debug(data):
     simplefilter("ignore")
     global debug_ret
     preprocessed = preprocess(data)
-    features, vocabulary = extract_features(preprocessed["CONTENT"])
+    features_tfidf, _ = extract_features(preprocessed["CONTENT"], TfidfVectorizer())
+    features_count, _ = extract_features(preprocessed["CONTENT"], CountVectorizer())
     labels = preprocessed["LABEL"].to_numpy()
 
     increase_step = 2400
     kfold_splits = 5
+    vectorizers = [
+        { "name": "Tfidf", "features": features_tfidf },
+        { "name": "Count", "features": features_count },
+    ]
     classifiers = [
         { "classifier": ComplementNB(force_alpha=True), "name": "Complement Naive Bayes", "short_name": "CNB" },
         { "classifier": DecisionTreeClassifier(), "name": "Decision Tree", "short_name": "DT" },
@@ -176,21 +191,22 @@ def debug(data):
         { "classifier": LinearSVC(), "name": "Linear Support Vector Classification", "short_name": "LSV" }
     ]
     for classifier in classifiers:
-        start = timeit.default_timer()
-        results = batch_train(features, labels, classifier["classifier"], increase_step, kfold_splits)
-        stop = timeit.default_timer()
-        debug_ret = results
+        for vectorizer in vectorizers:
+            start = timeit.default_timer()
+            results = batch_train(vectorizer["features"], labels, classifier["classifier"], increase_step, kfold_splits)
+            stop = timeit.default_timer()
+            debug_ret = results
 
-        print("--------------- " + classifier["name"] + " --- " + "Time: " + str(stop - start) + " ---------------")
-        print(results)
-        print("---------------------")
+            print("--------------- " + vectorizer["name"] + " -> " + classifier["name"] + " --- " + "Time: " + str(stop - start) + " ---------------")
+            print(results)
+            print("---------------------")
 
-        # This collects the metrics of the latest iteration for each classifier to generate latex bar charts
-        classifier["precision"] = results.iloc[-1]["avg_precision"]
-        classifier["recall"] = results.iloc[-1][2] # "avg_recall" for some reason isn't working.
-        classifier["f1"] = results.iloc[-1]["avg_f1"]
+            # This collects the metrics of the latest iteration for each classifier to generate latex bar charts
+            classifier[vectorizer["name"] + "precision"] = results.iloc[-1]["avg_precision"]
+            classifier[vectorizer["name"] + "recall"] = results.iloc[-1][2] # "avg_recall" for some reason isn't working.
+            classifier[vectorizer["name"] + "f1"] = results.iloc[-1]["avg_f1"]
 
-    printClassifierLatex(classifiers)
+    printClassifierLatex(classifiers, vectorizers)
 
 def main():
     df = pd.read_csv("./input.csv")
