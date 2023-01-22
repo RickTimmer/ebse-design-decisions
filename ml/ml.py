@@ -168,9 +168,9 @@ def printClassifierLatex(classifiers, vectorizers):
                 f1=round(classifier[vectorizer["name"] + "f1"], 3)
             )
             print(template_string)
-    print("}\classifiersdata")
+    print("}\classifierdata")
 
-def printIterationLatex(results):
+def printIterationLatex(results, vectorizer, classifier):
     print("\pgfplotstableread[row sep=\\\\,col sep=&]{")
     print("Size & Precision & Recall & F1-score \\\\")
     
@@ -183,7 +183,7 @@ def printIterationLatex(results):
                 f1=row[1]["avg_f1"]
             )
             print(template_string)
-    print("}\iterationdata")
+    print("}\iterationdata" + vectorizer["name"] + classifier["short_name"])
 
 def debug(data):
     simplefilter("ignore")
@@ -193,7 +193,7 @@ def debug(data):
     features_count, _ = extract_features(preprocessed["CONTENT"], CountVectorizer())
     labels = preprocessed["LABEL"].to_numpy()
 
-    increase_step = 100
+    increase_step = 1000
     kfold_splits = 5
     vectorizers = [
         { "name": "Tfidf", "features": features_tfidf },
@@ -221,7 +221,7 @@ def debug(data):
             classifier[vectorizer["name"] + "recall"] = results.iloc[-1][2] # "avg_recall" for some reason isn't working.
             classifier[vectorizer["name"] + "f1"] = results.iloc[-1]["avg_f1"]
 
-            printIterationLatex(results)
+            # printIterationLatex(results, vectorizer, classifier)
 
     printClassifierLatex(classifiers, vectorizers)
 
