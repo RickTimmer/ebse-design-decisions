@@ -133,10 +133,10 @@ def batch_train(features, labels, classifier, increase_step, kfold_splits):
             x_train = x_sub[train_index]
             y_train = y_sub[train_index]
             x_test = x_sub[test_index]
-            y_text = y_sub[test_index]
+            y_test = y_sub[test_index]
 
             model = classifier.fit(x_train, y_train)
-            precision, recall, f1 = evaluate_model(model, x_test, y_text)
+            precision, recall, f1 = evaluate_model(model, x_test, y_test)
             precisions.append(precision)
             recalls.append(recall)
             f1s.append(f1)
