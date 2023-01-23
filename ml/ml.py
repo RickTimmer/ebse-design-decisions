@@ -91,11 +91,10 @@ def evaluate_model(model, x_test, y_true):
         y_pred.append(model.predict(feature)[0])
 
     return (
-        precision_score(y_true, y_pred, average="weighted"),
-        recall_score(y_true, y_pred, average="weighted"),
-        f1_score(y_true, y_pred, average="weighted")
+        precision_score(y_true, y_pred, average="macro"),
+        recall_score(y_true, y_pred, average="macro"),
+        f1_score(y_true, y_pred, average="macro")
     )
-    pass
 
 test_x_sub, test_y_sub = None, None
 
@@ -193,14 +192,14 @@ def debug(data):
     features_count, _ = extract_features(preprocessed["CONTENT"], CountVectorizer())
     labels = preprocessed["LABEL"].to_numpy()
 
-    increase_step = 1000
+    increase_step = 100
     kfold_splits = 5
     vectorizers = [
         { "name": "Tfidf", "features": features_tfidf },
         { "name": "Count", "features": features_count },
     ]
     classifiers = [
-        { "classifier": ComplementNB(force_alpha=True), "name": "Complement Naive Bayes", "short_name": "CNB" },
+        { "classifier": ComplementNB(), "name": "Complement Naive Bayes", "short_name": "CNB" },
         { "classifier": DecisionTreeClassifier(), "name": "Decision Tree", "short_name": "DT" },
         { "classifier": RandomForestClassifier(), "name": "Random Forest", "short_name": "RF" },
         { "classifier": LinearSVC(), "name": "Linear Support Vector Classification", "short_name": "LSV" }
@@ -221,7 +220,7 @@ def debug(data):
             classifier[vectorizer["name"] + "recall"] = results.iloc[-1][2] # "avg_recall" for some reason isn't working.
             classifier[vectorizer["name"] + "f1"] = results.iloc[-1]["avg_f1"]
 
-            # printIterationLatex(results, vectorizer, classifier)
+            printIterationLatex(results, vectorizer, classifier)
 
     printClassifierLatex(classifiers, vectorizers)
 
