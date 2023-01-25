@@ -59,19 +59,6 @@ def contextual_resample(preprocessed: pd.DataFrame, subjects: pd.Series, size):
 
     candidates = []
     thread_count = 0
-    # while len(candidates) < size:
-    #
-    #
-    #     thread = random.choice(list(threads.keys()))
-    #     current_label_counts = labels.iloc[candidates].value_counts()
-    #     labels_needed = optimal_counts - current_label_counts
-    #
-    #     if any((optimal_counts - current_label_counts + thread_label_counts) < 0):
-    #         break
-    #
-    #     candidates.extend(threads[thread])
-    #     thread_count += 1
-    #     del threads[thread]
 
     labels_per_threads = get_labels_per_threads(threads, preprocessed)
     for label, amount in optimal_counts.iteritems():
