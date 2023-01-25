@@ -2,7 +2,6 @@ import numpy as np
 import pandas
 import pandas as pd
 # todo: find way that br removal doesn't glue two words together
-from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import f1_score, precision_score, recall_score
@@ -14,61 +13,13 @@ from sklearn.svm import LinearSVC
 from sklearn.utils import resample
 from math import ceil
 from warnings import simplefilter
-from string import Template
 import timeit
 
-
-from preprocessing import remove_embedded
-
-label_hierarchy = ["technology", "process", "property", "existence", "not-ak"]
-
-
-def get_highest_tag(tags):
-    """
-    Given a list of tags, extract the most important tag
-    """
-
-    tags = "".join(tags)
-
-    for label in label_hierarchy:
-        if label in tags:
-            if label == "technology" or label == "process":
-                return "executive"
-            return label
-
-    raise Exception("Invalid tag: not in hierarchy")
-
-
-def preprocess(raw: pd.DataFrame):
-    """
-    Preprocess the dataset by
-    :param raw:
-    :return:
-    """
-    # get only the columns needed for training
-    ret = raw[["SUBJECT", "BODY", "TAGS"]]
-
-    # parse HTML to plain_text and remove embedded threads
-    ret["CONTENT"] = ret["SUBJECT"] + " " + ret["BODY"].transform(
-        lambda x: remove_embedded(BeautifulSoup(x).get_text()))
-
-    # convert label list to python format and extract the most important one
-    ret["LABEL"] = ret["TAGS"].transform(
-        lambda x: get_highest_tag(x[1:-1].split(", ")))
-
-    return ret[["CONTENT", "LABEL"]]
+from formatting import printClassifierLatex, printIterationLatex
+from preprocessing import preprocess
 
 
 def extract_features(corpus, vectorizer):
-    """
-    Perform feature extraction on a set of strings
-    :param corpus: a set of strings, each will be transformed into a feature
-    :return: set of features
-    """
-    X = vectorizer.fit_transform(corpus)
-    return X, vectorizer.get_feature_names_out()
-
-def extract_features2(corpus, vectorizer):
     """
     Perform feature extraction on a set of strings
     :param corpus: a set of strings, each will be transformed into a feature
@@ -96,6 +47,7 @@ def evaluate_model(model, x_test, y_true):
         f1_score(y_true, y_pred, average="macro")
     )
 
+
 test_x_sub, test_y_sub = None, None
 
 
@@ -116,6 +68,7 @@ def batch_train(features, labels, classifier, increase_step, kfold_splits):
     columns = ["training size", "avg_precision", "avg_recall,", "avg_f1", "precisions", "recalls", "f1s"]
     rows = []
 
+    # maybe change this, smaller subsets will be trained more than higher ones
     initial_size = increase_step
     subset_count = ceil(features.shape[0] / increase_step)
     leftover_size = features.shape[0] % increase_step
@@ -125,7 +78,7 @@ def batch_train(features, labels, classifier, increase_step, kfold_splits):
         if i == subset_count - 1 and leftover_size != 0:
             subset_size = subset_size + leftover_size - increase_step
         x_sub, y_sub = resample(features, labels, n_samples=subset_size)
-        
+
         precisions, recalls, f1s = [], [], []
 
         for train_index, test_index in kf.split(x_sub, y_sub):
@@ -147,42 +100,13 @@ def batch_train(features, labels, classifier, increase_step, kfold_splits):
                      precisions,
                      recalls,
                      f1s
-        ])
+                     ])
 
     return pandas.DataFrame(rows, columns=columns)
 
 
 debug_ret = None
 
-def printClassifierLatex(classifiers, vectorizers):
-    print("\pgfplotstableread[row sep=\\\\,col sep=&]{")
-    print("Classifier & Precision & Recall & F1-score \\\\")
-    for classifier in classifiers:
-        for vectorizer in vectorizers:
-            template = Template("$classifier & $precision & $recall & $f1 \\\\")
-            template_string = template.substitute(
-                classifier=vectorizer["name"] + " " + classifier["short_name"], 
-                precision=round(classifier[vectorizer["name"] + "precision"], 3), 
-                recall=round(classifier[vectorizer["name"] + "recall"], 3), 
-                f1=round(classifier[vectorizer["name"] + "f1"], 3)
-            )
-            print(template_string)
-    print("}\classifierdata")
-
-def printIterationLatex(results, vectorizer, classifier):
-    print("\pgfplotstableread[row sep=\\\\,col sep=&]{")
-    print("Size & Precision & Recall & F1-score \\\\")
-    
-    for row in results.iterrows():
-            template = Template("$size & $precision & $recall & $f1 \\\\")
-            template_string = template.substitute(
-                size=row[1]["training size"],
-                precision=row[1]["avg_precision"],
-                recall=row[1][2], # avg_recall not working?
-                f1=row[1]["avg_f1"]
-            )
-            print(template_string)
-    print("}\iterationdata" + vectorizer["name"] + classifier["short_name"])
 
 def debug(data):
     simplefilter("ignore")
@@ -195,14 +119,14 @@ def debug(data):
     increase_step = 100
     kfold_splits = 5
     vectorizers = [
-        { "name": "Tfidf", "features": features_tfidf },
-        { "name": "Count", "features": features_count },
+        {"name": "Tfidf", "features": features_tfidf},
+        {"name": "Count", "features": features_count},
     ]
     classifiers = [
-        { "classifier": ComplementNB(), "name": "Complement Naive Bayes", "short_name": "CNB" },
-        { "classifier": DecisionTreeClassifier(), "name": "Decision Tree", "short_name": "DT" },
-        { "classifier": RandomForestClassifier(), "name": "Random Forest", "short_name": "RF" },
-        { "classifier": LinearSVC(), "name": "Linear Support Vector Classification", "short_name": "LSV" }
+        {"classifier": ComplementNB(), "name": "Complement Naive Bayes", "short_name": "CNB"},
+        {"classifier": DecisionTreeClassifier(), "name": "Decision Tree", "short_name": "DT"},
+        {"classifier": RandomForestClassifier(), "name": "Random Forest", "short_name": "RF"},
+        {"classifier": LinearSVC(), "name": "Linear Support Vector Classification", "short_name": "LSV"}
     ]
     for classifier in classifiers:
         for vectorizer in vectorizers:
@@ -211,18 +135,21 @@ def debug(data):
             stop = timeit.default_timer()
             debug_ret = results
 
-            print("--------------- " + vectorizer["name"] + " -> " + classifier["name"] + " --- " + "Time: " + str(stop - start) + " ---------------")
+            print("--------------- " + vectorizer["name"] + " -> " + classifier["name"] + " --- " + "Time: " + str(
+                stop - start) + " ---------------")
             print(results)
             print("---------------------")
 
             # This collects the metrics of the latest iteration for each classifier to generate latex bar charts
             classifier[vectorizer["name"] + "precision"] = results.iloc[-1]["avg_precision"]
-            classifier[vectorizer["name"] + "recall"] = results.iloc[-1][2] # "avg_recall" for some reason isn't working.
+            classifier[vectorizer["name"] + "recall"] = results.iloc[-1][
+                2]  # "avg_recall" for some reason isn't working.
             classifier[vectorizer["name"] + "f1"] = results.iloc[-1]["avg_f1"]
 
             printIterationLatex(results, vectorizer, classifier)
 
     printClassifierLatex(classifiers, vectorizers)
+
 
 def main():
     df = pd.read_csv("./input.csv")

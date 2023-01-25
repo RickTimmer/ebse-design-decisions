@@ -1,5 +1,8 @@
 import re
 
+import pandas as pd
+from bs4 import BeautifulSoup
+
 from formatting import red, color_text
 
 # todo:
@@ -45,3 +48,42 @@ def remove_embedded(raw):
         return stripped
 
     return raw
+
+
+label_hierarchy = ["technology", "process", "property", "existence", "not-ak"]
+
+
+def get_highest_tag(tags):
+    """
+    Given a list of tags, extract the most important tag
+    """
+
+    tags = "".join(tags)
+
+    for label in label_hierarchy:
+        if label in tags:
+            if label == "technology" or label == "process":
+                return "executive"
+            return label
+
+    raise Exception("Invalid tag: not in hierarchy")
+
+
+def preprocess(raw: pd.DataFrame):
+    """
+    Preprocess the dataset by
+    :param raw:
+    :return:
+    """
+    # get only the columns needed for training
+    ret = raw[["SUBJECT", "BODY", "TAGS"]]
+
+    # parse HTML to plain_text and remove embedded threads
+    ret["CONTENT"] = ret["SUBJECT"] + " " + ret["BODY"].transform(
+        lambda x: remove_embedded(BeautifulSoup(x).get_text()))
+
+    # convert label list to python format and extract the most important one
+    ret["LABEL"] = ret["TAGS"].transform(
+        lambda x: get_highest_tag(x[1:-1].split(", ")))
+
+    return ret[["CONTENT", "LABEL"]]
