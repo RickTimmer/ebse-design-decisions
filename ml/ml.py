@@ -1,3 +1,6 @@
+import os
+from dataclasses import dataclass
+
 import numpy as np
 import pandas
 import pandas as pd
@@ -19,6 +22,15 @@ from formatting import printClassifierLatex, printIterationLatex
 from preprocessing import preprocess
 
 
+@dataclass
+class Vectorizer:
+    name: str
+    features: np.ndarray
+    features_test: np.ndarray
+
+
+# todo: make sure training and testing features are extracted from one corpus
+#       i think else, the weights are going to be messed up between the two sets
 def extract_features(corpus, vectorizer):
     """
     Perform feature extraction on a set of strings
@@ -44,7 +56,8 @@ def evaluate_model(model, x_test, y_true):
     return (
         precision_score(y_true, y_pred, average="macro"),
         recall_score(y_true, y_pred, average="macro"),
-        f1_score(y_true, y_pred, average="macro")
+        f1_score(y_true, y_pred, average="macro"),
+        y_pred
     )
 
 
@@ -65,7 +78,15 @@ def batch_train(features, labels, classifier, increase_step, kfold_splits):
 
     kf = KFold(n_splits=kfold_splits)
 
-    columns = ["training size", "avg_precision", "avg_recall,", "avg_f1", "precisions", "recalls", "f1s"]
+    columns = ["training size",
+               "avg_precision",
+               "avg_recall,",
+               "avg_f1",
+               "precisions",
+               "recalls",
+               "f1s",
+               ]
+
     rows = []
 
     # maybe change this, smaller subsets will be trained more than higher ones
@@ -87,8 +108,9 @@ def batch_train(features, labels, classifier, increase_step, kfold_splits):
             x_test = x_sub[test_index]
             y_true = y_sub[test_index]
 
+            # todo: add GridSearch here in place of the model, with as parameter the classifier and parameters to adjust
             model = classifier.fit(x_train, y_train)
-            precision, recall, f1 = evaluate_model(model, x_test, y_true)
+            precision, recall, f1, y_pred = evaluate_model(model, x_test, y_true)
             precisions.append(precision)
             recalls.append(recall)
             f1s.append(f1)
@@ -102,58 +124,109 @@ def batch_train(features, labels, classifier, increase_step, kfold_splits):
                      f1s
                      ])
 
-    return pandas.DataFrame(rows, columns=columns)
+    return pandas.DataFrame(rows, columns=columns), model
 
 
 debug_ret = None
 
 
-def debug(data):
+def load_split():
+    both = pd.read_csv("dataset_split/both_preprocessed.csv")
+    training = pd.read_csv("dataset_split/training_set.csv")
+    testing = pd.read_csv("dataset_split/test_set.csv")
+
+    return both, training, testing
+
+
+def main():
     simplefilter("ignore")
     global debug_ret
-    preprocessed = preprocess(data)
-    features_tfidf, _ = extract_features(preprocessed["CONTENT"], TfidfVectorizer())
-    features_count, _ = extract_features(preprocessed["CONTENT"], CountVectorizer())
-    labels = preprocessed["LABEL"].to_numpy()
+    both, training, testing = load_split()
+
+    features_tfidf, _ = extract_features(both["CONTENT"], TfidfVectorizer())
+    features_count, _ = extract_features(both["CONTENT"], CountVectorizer())
+    labels_train = both["LABEL"].to_numpy()[training["ORIGINAL_RANK"]]
+    labels_test = both["LABEL"].to_numpy()[testing["ORIGINAL_RANK"]]
 
     increase_step = 100
     kfold_splits = 5
+
     vectorizers = [
-        {"name": "Tfidf", "features": features_tfidf},
-        {"name": "Count", "features": features_count},
+        Vectorizer(
+            name="Tfidf",
+            features=features_tfidf[training["ORIGINAL_RANK"]],
+            features_test=features_tfidf[testing["ORIGINAL_RANK"]]
+        ),
+        Vectorizer(
+            name="Count",
+            features=features_count[training["ORIGINAL_RANK"]],
+            features_test=features_count[testing["ORIGINAL_RANK"]]
+        ),
     ]
+
     classifiers = [
         {"classifier": ComplementNB(), "name": "Complement Naive Bayes", "short_name": "CNB"},
         {"classifier": DecisionTreeClassifier(), "name": "Decision Tree", "short_name": "DT"},
         {"classifier": RandomForestClassifier(), "name": "Random Forest", "short_name": "RF"},
         {"classifier": LinearSVC(), "name": "Linear Support Vector Classification", "short_name": "LSV"}
     ]
+
+    testing_rows = []
+    testing_columns = ["classifier", "vectorizer", "precision", "recall", "f1"]
+
     for classifier in classifiers:
         for vectorizer in vectorizers:
-            start = timeit.default_timer()
-            results = batch_train(vectorizer["features"], labels, classifier["classifier"], increase_step, kfold_splits)
-            stop = timeit.default_timer()
-            debug_ret = results
-
-            print("--------------- " + vectorizer["name"] + " -> " + classifier["name"] + " --- " + "Time: " + str(
-                stop - start) + " ---------------")
-            print(results)
-            print("---------------------")
-
-            # This collects the metrics of the latest iteration for each classifier to generate latex bar charts
-            classifier[vectorizer["name"] + "precision"] = results.iloc[-1]["avg_precision"]
-            classifier[vectorizer["name"] + "recall"] = results.iloc[-1][
-                2]  # "avg_recall" for some reason isn't working.
-            classifier[vectorizer["name"] + "f1"] = results.iloc[-1]["avg_f1"]
-
-            printIterationLatex(results, vectorizer, classifier)
+            execute_training(classifier, increase_step, kfold_splits, labels_test, labels_train, testing_rows,
+                             vectorizer)
 
     printClassifierLatex(classifiers, vectorizers)
 
+    eval_df = pd.DataFrame(testing_rows, columns=testing_columns)
 
-def main():
-    df = pd.read_csv("./input.csv")
-    debug(data=df)
+    print(eval_df)
+    eval_df.to_csv(os.path.join("output", "testing_on_max.csv"))
+
+
+def execute_training(classifier, increase_step, kfold_splits, labels_test, labels_train, testing_rows,
+                     vectorizer: Vectorizer):
+    global debug_ret
+    start = timeit.default_timer()
+    results, model = batch_train(vectorizer.features, labels_train, classifier["classifier"], increase_step,
+                                 kfold_splits)
+    stop = timeit.default_timer()
+
+    debug_ret = results
+    precision, recall, f1, y_pred = evaluate_model(model, vectorizer.features_test, labels_test)
+
+    testing_rows.append([
+        classifier["name"],
+        vectorizer.name,
+        precision,
+        recall,
+        f1
+    ])
+
+    print_overview(classifier, f1, precision, recall, results, start, stop, vectorizer)
+
+    # This collects the metrics of the latest iteration for each classifier to generate latex bar charts
+    classifier[vectorizer.name + "precision"] = results.iloc[-1]["avg_precision"]
+    classifier[vectorizer.name + "recall"] = results.iloc[-1][
+        2]  # "avg_recall" for some reason isn't working.
+    classifier[vectorizer.name + "f1"] = results.iloc[-1]["avg_f1"]
+    printIterationLatex(results, vectorizer, classifier)
+
+
+def print_overview(classifier, f1, precision, recall, results, start, stop, vectorizer: Vectorizer):
+    print(f"""
+--------------- {vectorizer.name} -> {classifier["name"]} --- Time: {stop - start} ---------------
+{print(results)}
+    --- TESTING ---
+        precision:  {precision}
+        recall:     {recall}
+        f1:         {f1}
+     ---   ---   ---
+---------------------
+    """)
 
 
 if __name__ == '__main__':

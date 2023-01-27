@@ -54,10 +54,10 @@ def printClassifierLatex(classifiers, vectorizers):
         for vectorizer in vectorizers:
             template = Template("$classifier & $precision & $recall & $f1 \\\\")
             template_string = template.substitute(
-                classifier=vectorizer["name"] + " " + classifier["short_name"],
-                precision=round(classifier[vectorizer["name"] + "precision"], 3),
-                recall=round(classifier[vectorizer["name"] + "recall"], 3),
-                f1=round(classifier[vectorizer["name"] + "f1"], 3)
+                classifier=vectorizer.name + " " + classifier["short_name"],
+                precision=round(classifier[vectorizer.name + "precision"], 3),
+                recall=round(classifier[vectorizer.name + "recall"], 3),
+                f1=round(classifier[vectorizer.name + "f1"], 3)
             )
             print(template_string)
     print("}\classifierdata")
@@ -76,4 +76,4 @@ def printIterationLatex(results, vectorizer, classifier):
             f1=row[1]["avg_f1"]
         )
         print(template_string)
-    print("}\iterationdata" + vectorizer["name"] + classifier["short_name"])
+    print("}\iterationdata" + vectorizer.name + classifier["short_name"])
