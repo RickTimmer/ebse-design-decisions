@@ -1,4 +1,4 @@
-ORIGINAL_RANK,CONTENT,LABEL
+ORIGINAL_INDEX,CONTENT,LABEL
 1557,"Re: I want to develop transactions for Cassandra and I want your feedback That's what I'm saying, yes. ",not-ak
 1558,"Re: I want to develop transactions for Cassandra and I want your feedback So basically, you are saying that even if I had developed something to provide serializable cross-partition transactions still nobody cares, nobody wants it because it would be too complex and for sure not performant enough? I just want to hear it crystal clear, so that I can talk to my supervisor and redirect my efforts to something more useful for you guys like this ramp for example.",not-ak
 1559,"Re: I want to develop transactions for Cassandra and I want your feedback There is a lot of interest in ramp, but the dependency on requiring a unique timestamp id is a bitch. There is zero interest in committing and maintaining a more heavyweight framework to get all the way to serializable cross-partition transactions. ",not-ak

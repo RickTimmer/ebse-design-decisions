@@ -1,3 +1,4 @@
+import logging
 import os
 from dataclasses import dataclass
 
@@ -7,7 +8,15 @@ import random
 from time import time
 from numpy import floor
 
+from flags import verbose
+from formatting import ColorConsoleFormatter
 from preprocessing import preprocess
+
+logger = logging.getLogger("Util")
+logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+handler = logging.StreamHandler()
+handler.setFormatter(ColorConsoleFormatter('%(name)s: %(message)s'))
+logger.addHandler(handler)
 
 
 @dataclass
@@ -44,9 +53,33 @@ def get_labels_per_threads(threads, preprocessed):
     return pd.DataFrame(data=raw).T.fillna(0)
 
 
+def get_altset_iloc(total, subset_iloc):
+    """
+    Get the array indexes of the inverse of a subset from a total set
+    :param total:
+    :param subset_iloc:
+    :return:
+    """
+
+    subset_iloc_set = set(subset_iloc)
+    return [ix for ix in range(total.shape[0]) if ix not in subset_iloc_set]
+
+
+def contextual_resample_comp(preprocessed: pd.DataFrame, size):
+    """
+    Shortcut for contextual resample, in case one dataframe holds all data required
+    :param preprocessed:
+    :param size:
+    :return:
+    """
+    return contextual_resample(preprocessed, preprocessed["SUBJECT"], size)
+
+
 def contextual_resample(preprocessed: pd.DataFrame, subjects: pd.Series, size):
     """
     Resample in the context of the email dataset: threads will not be split
+
+    :return a set of *iloc* indices from the original dataset, that corresponds to the subset
     """
 
     # CONTENT, LABEL
@@ -67,8 +100,10 @@ def contextual_resample(preprocessed: pd.DataFrame, subjects: pd.Series, size):
         # get all threads that would collect a label appropriately
         possible_threads = labels_per_threads[(label_counts > 0) & (label_counts <= amount)]
 
-        while possible_threads.shape[0] == 0 or labels.iloc[candidates].value_counts().get(label, 0) < amount:
-            print(possible_threads)
+        # while there are possible threads, and we still need to find labels
+        while possible_threads.shape[0] != 0 and labels.iloc[candidates].value_counts().get(label, 0) < amount:
+            logger.debug(
+                f"current size: {len(candidates)}\n\t{possible_threads.shape[0]} possible threads for getting {amount} of {label}")
 
             chosen_thread = random.choice(possible_threads.index)
             chosen_emails = threads[chosen_thread]
@@ -82,9 +117,13 @@ def contextual_resample(preprocessed: pd.DataFrame, subjects: pd.Series, size):
 
             thread_count += 1
 
-    print(len(candidates), "in subset")
-    print(thread_count, "threads")
+    logger.debug(len(candidates), "in subset")
+    logger.debug(thread_count, "threads")
     return candidates
+
+
+def get_train_test_pair(total, test_ixs):
+    return total.iloc[test_ixs], total.drop(test_ixs)
 
 
 if __name__ == '__main__':
@@ -94,13 +133,13 @@ if __name__ == '__main__':
     subset = pp.iloc[cand]  # ~20%
     altset = pp.drop(subset.index)  # ~80%
 
-    print("total dist")
-    print(pp["LABEL"].value_counts() / pp.shape[0])
+    logger.info("total dist")
+    logger.info(pp["LABEL"].value_counts() / pp.shape[0])
 
-    print("subset dist")
-    print(subset["LABEL"].value_counts() / subset.shape[0])
+    logger.info("subset dist")
+    logger.info(subset["LABEL"].value_counts() / subset.shape[0])
 
-    orig_rank_name = "ORIGINAL_RANK"
+    orig_rank_name = "ORIGINAL_INDEX"
     folder = f"{int(time())}_division"
     os.mkdir(folder)
 
