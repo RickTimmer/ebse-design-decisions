@@ -23,9 +23,14 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils import resample
 from tqdm import tqdm
 
+from latex import evaluationsToLatex
+
 from formatting import printClassifierLatex, printIterationLatex, ColorConsoleFormatter
-from ml.flags import verbose
+from flags import verbose
 from util import contextual_resample_comp, get_altset_iloc
+
+# Used for model persistence
+from joblib import dump, load
 
 logger = logging.getLogger("ML")
 logger.setLevel(logging.DEBUG if verbose else logging.INFO)
@@ -161,7 +166,7 @@ debug_split = None
 
 
 def batch_grid_train(f_train, l_train, f_test, l_test, classifier, increase_step,
-                     training_pp: pd.DataFrame, parameters):
+                     training_pp: pd.DataFrame, parameters, name):
     """
     :param parameters:
     :param training_pp: containing CONTENT, SUBJECT and LABEL
@@ -186,28 +191,32 @@ def batch_grid_train(f_train, l_train, f_test, l_test, classifier, increase_step
         if i == subset_count - 1 and leftover_size != 0:
             subset_size = subset_size + leftover_size - increase_step
 
-        progress.set_description(f"Training approximate size of {subset_size}")
+        # progress.set_description(f"Training approximate size of {subset_size}")
 
-        # get subset of approximately given size
+        # # get subset of approximately given size
         ix_sub = contextual_resample_comp(training_pp, subset_size)
-        x_sub, y_sub = f_train[ix_sub], l_train[ix_sub]
-        sub_pp = training_pp.iloc[ix_sub]
+        # x_sub, y_sub = f_train[ix_sub], l_train[ix_sub]
+        # sub_pp = training_pp.iloc[ix_sub]
 
-        # k-fold like splitting
-        # not actual k-fold: no guarantee that each fold is completely separate
-        splits = []
-        split_size = floor(len(ix_sub) / 5)
-        logger.debug(f"Creating splits of {split_size}")
+        # # k-fold like splitting
+        # # not actual k-fold: no guarantee that each fold is completely separate
+        # splits = []
+        # split_size = floor(len(ix_sub) / 5)
+        # logger.debug(f"Creating splits of {split_size}")
 
-        for _ in range(5):
-            test_index = contextual_resample_comp(sub_pp, split_size)
-            train_index = get_altset_iloc(sub_pp, test_index)
-            splits.append((train_index, test_index))
+        # for _ in range(5):
+        #     test_index = contextual_resample_comp(sub_pp, split_size)
+        #     train_index = get_altset_iloc(sub_pp, test_index)
+        #     splits.append((train_index, test_index))
 
-        # apply GridSearchCV, internally applies folding like defined above for validation
-        clf = GridSearchCV(classifier, parameters, cv=splits)
+        # # apply GridSearchCV, internally applies folding like defined above for validation
+        # clf = GridSearchCV(classifier, parameters, cv=splits)
 
-        clf.fit(x_sub, y_sub)
+        # clf.fit(x_sub, y_sub)
+
+        path = "models/" + name + "_size_" + str(subset_size) + ".joblib"
+        # dump(clf, path)
+        clf = load(path)
 
         # test (not validate)
         precision, recall, f1, y_pred = evaluate_model(clf, f_test, l_test)
@@ -258,22 +267,22 @@ def main():
          "parameters": {
              "alpha": [0.5, 1.0]
          }
-         },
+        },
         {"classifier": DecisionTreeClassifier(), "name": "Decision Tree", "short_name": "DT",
          "parameters": {
              "min_samples_split": [i for i in range(2, 7)]
          }
-         },
+        },
         {"classifier": RandomForestClassifier(), "name": "Random Forest", "short_name": "RF",
          "parameters": {
              "n_estimators": [i for i in range(1, 100, 10)]
          }
-         },
+        },
         {"classifier": LinearSVC(), "name": "Linear Support Vector Classification", "short_name": "LSV",
          "parameters": {
              "max_iter": [i for i in range(100, 2000, 100)]
          }
-         }
+        }
     ]
 
     # testing_rows = []
@@ -293,12 +302,14 @@ def main():
             logger.info(f"\t{vectorizer.name}")
             f_train, f_test = split.split(vectorizer.features)
             start = timeit.default_timer()
+            name = classifier["short_name"] + "_" + vectorizer.name
             train_eval = batch_grid_train(f_train, l_train,
                                           f_test, l_test,
                                           classifier["classifier"],
                                           increase_step,
                                           training_df,
-                                          classifier["parameters"])
+                                          classifier["parameters"],
+                                          name)
             stop = timeit.default_timer()
 
             train_eval["classifier"] = classifier["name"]
@@ -308,13 +319,10 @@ def main():
 
     evaluations.to_csv(os.path.join("output", "grid_evaluations.csv"))
 
-    return
-    printClassifierLatex(classifiers, vectorizers)
-
-    eval_df = pd.DataFrame(testing_rows, columns=testing_columns)
-
-    print(eval_df)
-    eval_df.to_csv(os.path.join("output", "testing_on_max.csv"))
+    # eval_df = pd.DataFrame(testing_rows, columns=testing_columns)
+    evaluationsToLatex(evaluations, increase_step)
+    # print(eval_df)
+    # eval_df.to_csv(os.path.join("output", "testing_on_max.csv"))
 
 
 def execute_training(classifier, increase_step, kfold_splits, labels_test, labels_train, testing_rows,
@@ -340,8 +348,7 @@ def execute_training(classifier, increase_step, kfold_splits, labels_test, label
 
     # This collects the metrics of the latest iteration for each classifier to generate latex bar charts
     classifier[vectorizer.name + "precision"] = results.iloc[-1]["avg_precision"]
-    classifier[vectorizer.name + "recall"] = results.iloc[-1][
-        2]  # "avg_recall" for some reason isn't working.
+    classifier[vectorizer.name + "recall"] = results.iloc[-1][2]  # "avg_recall" for some reason isn't working.
     classifier[vectorizer.name + "f1"] = results.iloc[-1]["avg_f1"]
     printIterationLatex(results, vectorizer, classifier)
 
