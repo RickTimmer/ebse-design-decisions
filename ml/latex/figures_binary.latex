@@ -8,23 +8,23 @@
 \toprule
 size &  precision &  recall &    f1 \\
 \midrule
-1883 &      0.392 &   0.399 & 0.339 \\
+1883 &      0.647 &   0.598 & 0.506 \\
 \bottomrule
 \end{tabular}
-\caption{All iteration results for CountCNB}
-\label{tab:CountCNB}
+\caption{All iteration results for CountCNB (binary)}
+\label{tab:CountCNB_binary}
 }
 \hfill\parbox{.45\linewidth}{
 \centering
 \begin{tabular}{lrrr}
 \toprule
-size &  precision &  recall &   f1 \\
+size &  precision &  recall &    f1 \\
 \midrule
-1883 &      0.153 &    0.25 & 0.19 \\
+1883 &      0.683 &   0.585 & 0.561 \\
 \bottomrule
 \end{tabular}
-\caption{All iteration results for TfidfCNB}
-\label{tab:TfidfCNB}
+\caption{All iteration results for TfidfCNB (binary)}
+\label{tab:TfidfCNB_binary}
 }
 \end{table}
 
@@ -38,11 +38,11 @@ size &  precision &  recall &   f1 \\
 \toprule
 size &  precision &  recall &    f1 \\
 \midrule
-1883 &      0.339 &   0.315 & 0.317 \\
+1883 &      0.629 &   0.612 & 0.613 \\
 \bottomrule
 \end{tabular}
-\caption{All iteration results for CountDT}
-\label{tab:CountDT}
+\caption{All iteration results for CountDT (binary)}
+\label{tab:CountDT_binary}
 }
 \hfill\parbox{.45\linewidth}{
 \centering
@@ -50,11 +50,11 @@ size &  precision &  recall &    f1 \\
 \toprule
 size &  precision &  recall &    f1 \\
 \midrule
-1883 &      0.357 &   0.323 & 0.329 \\
+1883 &      0.655 &   0.621 & 0.622 \\
 \bottomrule
 \end{tabular}
-\caption{All iteration results for TfidfDT}
-\label{tab:TfidfDT}
+\caption{All iteration results for TfidfDT (binary)}
+\label{tab:TfidfDT_binary}
 }
 \end{table}
 
@@ -68,11 +68,11 @@ size &  precision &  recall &    f1 \\
 \toprule
 size &  precision &  recall &    f1 \\
 \midrule
-1883 &      0.439 &   0.373 & 0.385 \\
+1883 &      0.679 &   0.643 & 0.645 \\
 \bottomrule
 \end{tabular}
-\caption{All iteration results for CountLSVC}
-\label{tab:CountLSVC}
+\caption{All iteration results for CountLSVC (binary)}
+\label{tab:CountLSVC_binary}
 }
 \hfill\parbox{.45\linewidth}{
 \centering
@@ -80,11 +80,11 @@ size &  precision &  recall &    f1 \\
 \toprule
 size &  precision &  recall &    f1 \\
 \midrule
-1883 &      0.591 &   0.354 & 0.371 \\
+1883 &      0.728 &   0.657 & 0.659 \\
 \bottomrule
 \end{tabular}
-\caption{All iteration results for TfidfLSVC}
-\label{tab:TfidfLSVC}
+\caption{All iteration results for TfidfLSVC (binary)}
+\label{tab:TfidfLSVC_binary}
 }
 \end{table}
 
@@ -98,11 +98,11 @@ size &  precision &  recall &    f1 \\
 \toprule
 size &  precision &  recall &    f1 \\
 \midrule
-1883 &      0.447 &   0.302 & 0.287 \\
+1883 &      0.713 &   0.627 & 0.621 \\
 \bottomrule
 \end{tabular}
-\caption{All iteration results for CountRF}
-\label{tab:CountRF}
+\caption{All iteration results for CountRF (binary)}
+\label{tab:CountRF_binary}
 }
 \hfill\parbox{.45\linewidth}{
 \centering
@@ -110,11 +110,11 @@ size &  precision &  recall &    f1 \\
 \toprule
 size &  precision &  recall &    f1 \\
 \midrule
-1883 &      0.541 &   0.302 & 0.287 \\
+1883 &      0.721 &   0.618 & 0.606 \\
 \bottomrule
 \end{tabular}
-\caption{All iteration results for TfidfRF}
-\label{tab:TfidfRF}
+\caption{All iteration results for TfidfRF (binary)}
+\label{tab:TfidfRF_binary}
 }
 \end{table}
 
@@ -131,14 +131,14 @@ size &  precision &  recall &    f1 \\
                 xticklabel style={text width=1cm,align=center},
                 xtick=data,
             ]
-            \addplot table[x=Classifier,y=Precision]{\classifierdata};
-            \addplot table[x=Classifier,y=Recall]{\classifierdata};
-            \addplot table[x=Classifier,y=F1-score]{\classifierdata};
+            \addplot table[x=Classifier,y=Precision]{\classifierdata_binary};
+            \addplot table[x=Classifier,y=Recall]{\classifierdata_binary};
+            \addplot table[x=Classifier,y=F1-score]{\classifierdata_binary};
             \legend{Precision, Recall, F1-score}
         \end{axis}
     \end{tikzpicture}
-    \caption{Metrics per classifier for all labelled emails}
-    \label{fig:classifier_metrics}
+    \caption{Metrics per classifier for all labelled emails (binary)}
+    \label{fig:classifier_metrics_binary}
 \end{figure}
 
 \begin{figure}[H]
@@ -156,14 +156,14 @@ size &  precision &  recall &    f1 \\
                 xtick=data,
                 ymax=.6
             ]
-            \addplot table[x=Size,y=Precision]{\iterdataComplementNaiveBayesTfidf};
-            \addplot table[x=Size,y=Recall]{\iterdataComplementNaiveBayesTfidf};
-            \addplot table[x=Size,y=F1-score]{\iterdataComplementNaiveBayesTfidf};
+            \addplot table[x=Size,y=Precision]{\iterdataComplementNaiveBayesTfidf_binary};
+            \addplot table[x=Size,y=Recall]{\iterdataComplementNaiveBayesTfidf_binary};
+            \addplot table[x=Size,y=F1-score]{\iterdataComplementNaiveBayesTfidf_binary};
             \legend{Precision, Recall, F1-score}
         \end{axis}
     \end{tikzpicture}
-    \caption{Metrics per iteration for Complement Naive Bayes Tfidf}
-    \label{fig:iteration_metrics_ComplementNaiveBayesTfidf}
+    \caption{Metrics per iteration for Complement Naive Bayes Tfidf (binary)}
+    \label{fig:iteration_metrics_ComplementNaiveBayesTfidf_binary}
 \end{figure}
 
 \begin{figure}[H]
@@ -181,14 +181,14 @@ size &  precision &  recall &    f1 \\
                 xtick=data,
                 ymax=.6
             ]
-            \addplot table[x=Size,y=Precision]{\iterdataComplementNaiveBayesCount};
-            \addplot table[x=Size,y=Recall]{\iterdataComplementNaiveBayesCount};
-            \addplot table[x=Size,y=F1-score]{\iterdataComplementNaiveBayesCount};
+            \addplot table[x=Size,y=Precision]{\iterdataComplementNaiveBayesCount_binary};
+            \addplot table[x=Size,y=Recall]{\iterdataComplementNaiveBayesCount_binary};
+            \addplot table[x=Size,y=F1-score]{\iterdataComplementNaiveBayesCount_binary};
             \legend{Precision, Recall, F1-score}
         \end{axis}
     \end{tikzpicture}
-    \caption{Metrics per iteration for Complement Naive Bayes Count}
-    \label{fig:iteration_metrics_ComplementNaiveBayesCount}
+    \caption{Metrics per iteration for Complement Naive Bayes Count (binary)}
+    \label{fig:iteration_metrics_ComplementNaiveBayesCount_binary}
 \end{figure}
 
 \begin{figure}[H]
@@ -206,14 +206,14 @@ size &  precision &  recall &    f1 \\
                 xtick=data,
                 ymax=.6
             ]
-            \addplot table[x=Size,y=Precision]{\iterdataDecisionTreeTfidf};
-            \addplot table[x=Size,y=Recall]{\iterdataDecisionTreeTfidf};
-            \addplot table[x=Size,y=F1-score]{\iterdataDecisionTreeTfidf};
+            \addplot table[x=Size,y=Precision]{\iterdataDecisionTreeTfidf_binary};
+            \addplot table[x=Size,y=Recall]{\iterdataDecisionTreeTfidf_binary};
+            \addplot table[x=Size,y=F1-score]{\iterdataDecisionTreeTfidf_binary};
             \legend{Precision, Recall, F1-score}
         \end{axis}
     \end{tikzpicture}
-    \caption{Metrics per iteration for Decision Tree Tfidf}
-    \label{fig:iteration_metrics_DecisionTreeTfidf}
+    \caption{Metrics per iteration for Decision Tree Tfidf (binary)}
+    \label{fig:iteration_metrics_DecisionTreeTfidf_binary}
 \end{figure}
 
 \begin{figure}[H]
@@ -231,14 +231,14 @@ size &  precision &  recall &    f1 \\
                 xtick=data,
                 ymax=.6
             ]
-            \addplot table[x=Size,y=Precision]{\iterdataDecisionTreeCount};
-            \addplot table[x=Size,y=Recall]{\iterdataDecisionTreeCount};
-            \addplot table[x=Size,y=F1-score]{\iterdataDecisionTreeCount};
+            \addplot table[x=Size,y=Precision]{\iterdataDecisionTreeCount_binary};
+            \addplot table[x=Size,y=Recall]{\iterdataDecisionTreeCount_binary};
+            \addplot table[x=Size,y=F1-score]{\iterdataDecisionTreeCount_binary};
             \legend{Precision, Recall, F1-score}
         \end{axis}
     \end{tikzpicture}
-    \caption{Metrics per iteration for Decision Tree Count}
-    \label{fig:iteration_metrics_DecisionTreeCount}
+    \caption{Metrics per iteration for Decision Tree Count (binary)}
+    \label{fig:iteration_metrics_DecisionTreeCount_binary}
 \end{figure}
 
 \begin{figure}[H]
@@ -256,14 +256,14 @@ size &  precision &  recall &    f1 \\
                 xtick=data,
                 ymax=.6
             ]
-            \addplot table[x=Size,y=Precision]{\iterdataRandomForestTfidf};
-            \addplot table[x=Size,y=Recall]{\iterdataRandomForestTfidf};
-            \addplot table[x=Size,y=F1-score]{\iterdataRandomForestTfidf};
+            \addplot table[x=Size,y=Precision]{\iterdataRandomForestTfidf_binary};
+            \addplot table[x=Size,y=Recall]{\iterdataRandomForestTfidf_binary};
+            \addplot table[x=Size,y=F1-score]{\iterdataRandomForestTfidf_binary};
             \legend{Precision, Recall, F1-score}
         \end{axis}
     \end{tikzpicture}
-    \caption{Metrics per iteration for Random Forest Tfidf}
-    \label{fig:iteration_metrics_RandomForestTfidf}
+    \caption{Metrics per iteration for Random Forest Tfidf (binary)}
+    \label{fig:iteration_metrics_RandomForestTfidf_binary}
 \end{figure}
 
 \begin{figure}[H]
@@ -281,14 +281,14 @@ size &  precision &  recall &    f1 \\
                 xtick=data,
                 ymax=.6
             ]
-            \addplot table[x=Size,y=Precision]{\iterdataRandomForestCount};
-            \addplot table[x=Size,y=Recall]{\iterdataRandomForestCount};
-            \addplot table[x=Size,y=F1-score]{\iterdataRandomForestCount};
+            \addplot table[x=Size,y=Precision]{\iterdataRandomForestCount_binary};
+            \addplot table[x=Size,y=Recall]{\iterdataRandomForestCount_binary};
+            \addplot table[x=Size,y=F1-score]{\iterdataRandomForestCount_binary};
             \legend{Precision, Recall, F1-score}
         \end{axis}
     \end{tikzpicture}
-    \caption{Metrics per iteration for Random Forest Count}
-    \label{fig:iteration_metrics_RandomForestCount}
+    \caption{Metrics per iteration for Random Forest Count (binary)}
+    \label{fig:iteration_metrics_RandomForestCount_binary}
 \end{figure}
 
 \begin{figure}[H]
@@ -306,14 +306,14 @@ size &  precision &  recall &    f1 \\
                 xtick=data,
                 ymax=.6
             ]
-            \addplot table[x=Size,y=Precision]{\iterdataLinearSupportVectorClassificationTfidf};
-            \addplot table[x=Size,y=Recall]{\iterdataLinearSupportVectorClassificationTfidf};
-            \addplot table[x=Size,y=F1-score]{\iterdataLinearSupportVectorClassificationTfidf};
+            \addplot table[x=Size,y=Precision]{\iterdataLinearSupportVectorClassificationTfidf_binary};
+            \addplot table[x=Size,y=Recall]{\iterdataLinearSupportVectorClassificationTfidf_binary};
+            \addplot table[x=Size,y=F1-score]{\iterdataLinearSupportVectorClassificationTfidf_binary};
             \legend{Precision, Recall, F1-score}
         \end{axis}
     \end{tikzpicture}
-    \caption{Metrics per iteration for Linear Support Vector Classification Tfidf}
-    \label{fig:iteration_metrics_LinearSupportVectorClassificationTfidf}
+    \caption{Metrics per iteration for Linear Support Vector Classification Tfidf (binary)}
+    \label{fig:iteration_metrics_LinearSupportVectorClassificationTfidf_binary}
 \end{figure}
 
 \begin{figure}[H]
@@ -331,13 +331,13 @@ size &  precision &  recall &    f1 \\
                 xtick=data,
                 ymax=.6
             ]
-            \addplot table[x=Size,y=Precision]{\iterdataLinearSupportVectorClassificationCount};
-            \addplot table[x=Size,y=Recall]{\iterdataLinearSupportVectorClassificationCount};
-            \addplot table[x=Size,y=F1-score]{\iterdataLinearSupportVectorClassificationCount};
+            \addplot table[x=Size,y=Precision]{\iterdataLinearSupportVectorClassificationCount_binary};
+            \addplot table[x=Size,y=Recall]{\iterdataLinearSupportVectorClassificationCount_binary};
+            \addplot table[x=Size,y=F1-score]{\iterdataLinearSupportVectorClassificationCount_binary};
             \legend{Precision, Recall, F1-score}
         \end{axis}
     \end{tikzpicture}
-    \caption{Metrics per iteration for Linear Support Vector Classification Count}
-    \label{fig:iteration_metrics_LinearSupportVectorClassificationCount}
+    \caption{Metrics per iteration for Linear Support Vector Classification Count (binary)}
+    \label{fig:iteration_metrics_LinearSupportVectorClassificationCount_binary}
 \end{figure}
 

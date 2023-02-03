@@ -21,7 +21,9 @@ from sklearn.naive_bayes import ComplementNB
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils import resample
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 from latex import evaluationsToLatex
 
@@ -76,7 +78,7 @@ class Vectorizer:
         self.features = X
 
 
-def evaluate_model(model, x_test, y_true):
+def evaluate_model(model, x_test, y_true, name):
     """
     Calculate evaluation metrics for a model
     :param model: the trained model to evaluate
@@ -87,6 +89,11 @@ def evaluate_model(model, x_test, y_true):
     y_pred = []
     for feature in x_test:
         y_pred.append(model.predict(feature)[0])
+
+    # cm = confusion_matrix(y_true, y_pred, labels=model.classes_)
+    # disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+    # disp.plot()
+    # plt.savefig("confusion/" + name + ".png")
 
     return (
         precision_score(y_true, y_pred, average="macro"),
@@ -220,7 +227,7 @@ def batch_grid_train(f_train, l_train, f_test, l_test, classifier, increase_step
         clf = load(path)
 
         # test (not validate)
-        precision, recall, f1, y_pred = evaluate_model(clf, f_test, l_test)
+        precision, recall, f1, y_pred = evaluate_model(clf, f_test, l_test, name + suffix)
 
         rows.append([len(ix_sub), subset_size, precision, recall, f1])
 
@@ -250,7 +257,7 @@ def main():
 
     l_train, l_test = training_df["LABEL"], testing_df["LABEL"]
 
-    increase_step = 100
+    increase_step = 2000
     kfold_splits = 5
 
     split = Split(training=training_df["ORIGINAL_INDEX"], testing=testing_df["ORIGINAL_INDEX"])

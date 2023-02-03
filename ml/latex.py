@@ -17,7 +17,7 @@ import string
 #   figures_file.write(figures)
 #   figures_file.close
 
-def evaluationsToLatex(evaluations, increase_step):
+def evaluationsToLatex(evaluations, increase_step, binary):
   # print(evaluations)
 
   data = ""

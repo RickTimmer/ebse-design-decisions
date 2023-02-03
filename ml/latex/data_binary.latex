@@ -1,0 +1,52 @@
+\pgfplotstableread[row sep=\\,col sep=&]{
+    Classifier & Precision & Recall & F1-score \\
+    Tfidf CNB & 0.6827284105131415 & 0.5850815850815851 & 0.5614130434782609 \\
+    Count CNB & 0.6467505241090147 & 0.5979020979020979 & 0.5064220183486239 \\
+    Tfidf DT & 0.6554336468129571 & 0.6213578088578089 & 0.6216112531969309 \\
+    Count DT & 0.6294642857142857 & 0.6115384615384616 & 0.6128418218115975 \\
+    Tfidf RF & 0.7207696506550219 & 0.6178467365967366 & 0.6064756063169768 \\
+    Count RF & 0.7126145447455644 & 0.6270979020979021 & 0.6209965635738831 \\
+    Tfidf LSVC & 0.7275038504546701 & 0.6570949883449884 & 0.6591312846038851 \\
+    Count LSVC & 0.6791959321041849 & 0.6427301864801864 & 0.6453329520904816 \\
+}\classifierdata_binary
+
+\pgfplotstableread[row sep=\\,col sep=&]{
+    Size & Precision & Recall & F1-score \\
+    1883 & 0.6827284105131415 & 0.5850815850815851 & 0.5614130434782609 \\
+}\iterdataComplementNaiveBayesTfidf_binary
+
+\pgfplotstableread[row sep=\\,col sep=&]{
+    Size & Precision & Recall & F1-score \\
+    1883 & 0.6467505241090147 & 0.5979020979020979 & 0.5064220183486239 \\
+}\iterdataComplementNaiveBayesCount_binary
+
+\pgfplotstableread[row sep=\\,col sep=&]{
+    Size & Precision & Recall & F1-score \\
+    1883 & 0.6554336468129571 & 0.6213578088578089 & 0.6216112531969309 \\
+}\iterdataDecisionTreeTfidf_binary
+
+\pgfplotstableread[row sep=\\,col sep=&]{
+    Size & Precision & Recall & F1-score \\
+    1883 & 0.6294642857142857 & 0.6115384615384616 & 0.6128418218115975 \\
+}\iterdataDecisionTreeCount_binary
+
+\pgfplotstableread[row sep=\\,col sep=&]{
+    Size & Precision & Recall & F1-score \\
+    1883 & 0.7207696506550219 & 0.6178467365967366 & 0.6064756063169768 \\
+}\iterdataRandomForestTfidf_binary
+
+\pgfplotstableread[row sep=\\,col sep=&]{
+    Size & Precision & Recall & F1-score \\
+    1883 & 0.7126145447455644 & 0.6270979020979021 & 0.6209965635738831 \\
+}\iterdataRandomForestCount_binary
+
+\pgfplotstableread[row sep=\\,col sep=&]{
+    Size & Precision & Recall & F1-score \\
+    1883 & 0.7275038504546701 & 0.6570949883449884 & 0.6591312846038851 \\
+}\iterdataLinearSupportVectorClassificationTfidf_binary
+
+\pgfplotstableread[row sep=\\,col sep=&]{
+    Size & Precision & Recall & F1-score \\
+    1883 & 0.6791959321041849 & 0.6427301864801864 & 0.6453329520904816 \\
+}\iterdataLinearSupportVectorClassificationCount_binary
+
