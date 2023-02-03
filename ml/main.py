@@ -26,7 +26,7 @@ from tqdm import tqdm
 from latex import evaluationsToLatex
 
 from formatting import printClassifierLatex, printIterationLatex, ColorConsoleFormatter
-from flags import verbose
+from flags import verbose, binary
 from util import contextual_resample_comp, get_altset_iloc
 
 # Used for model persistence
@@ -166,7 +166,7 @@ debug_split = None
 
 
 def batch_grid_train(f_train, l_train, f_test, l_test, classifier, increase_step,
-                     training_pp: pd.DataFrame, parameters, name):
+                     training_pp: pd.DataFrame, parameters, name, binary):
     """
     :param parameters:
     :param training_pp: containing CONTENT, SUBJECT and LABEL
@@ -191,9 +191,9 @@ def batch_grid_train(f_train, l_train, f_test, l_test, classifier, increase_step
         if i == subset_count - 1 and leftover_size != 0:
             subset_size = subset_size + leftover_size - increase_step
 
-        # progress.set_description(f"Training approximate size of {subset_size}")
+        progress.set_description(f"Training approximate size of {subset_size}")
 
-        # # get subset of approximately given size
+        # # # get subset of approximately given size
         ix_sub = contextual_resample_comp(training_pp, subset_size)
         # x_sub, y_sub = f_train[ix_sub], l_train[ix_sub]
         # sub_pp = training_pp.iloc[ix_sub]
@@ -214,7 +214,8 @@ def batch_grid_train(f_train, l_train, f_test, l_test, classifier, increase_step
 
         # clf.fit(x_sub, y_sub)
 
-        path = "models/" + name + "_size_" + str(subset_size) + ".joblib"
+        suffix = "_binary" if binary else ""
+        path = "models/" + name + "_size_" + str(subset_size) + suffix + ".joblib"
         # dump(clf, path)
         clf = load(path)
 
@@ -241,6 +242,11 @@ def main():
     simplefilter("ignore")
     global debug_ret
     both, training_df, testing_df = load_split()
+
+    if binary:
+        both.loc[both["LABEL"] != "not-ak", "LABEL"] = "ak"
+        training_df.loc[training_df["LABEL"] != "not-ak", "LABEL"] = "ak"
+        testing_df.loc[testing_df["LABEL"] != "not-ak", "LABEL"] = "ak"
 
     l_train, l_test = training_df["LABEL"], testing_df["LABEL"]
 
@@ -309,7 +315,8 @@ def main():
                                           increase_step,
                                           training_df,
                                           classifier["parameters"],
-                                          name)
+                                          name,
+                                          binary)
             stop = timeit.default_timer()
 
             train_eval["classifier"] = classifier["name"]
@@ -320,7 +327,7 @@ def main():
     evaluations.to_csv(os.path.join("output", "grid_evaluations.csv"))
 
     # eval_df = pd.DataFrame(testing_rows, columns=testing_columns)
-    evaluationsToLatex(evaluations, increase_step)
+    evaluationsToLatex(evaluations, increase_step, binary)
     # print(eval_df)
     # eval_df.to_csv(os.path.join("output", "testing_on_max.csv"))
 

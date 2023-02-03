@@ -24,6 +24,9 @@ def evaluationsToLatex(evaluations, increase_step):
   figures = ""
   table = str.maketrans('', '', string.ascii_lowercase)
 
+  binary_suffix = "_binary" if binary else ""
+  binary_string = " (binary)" if binary else ""
+
   classifier_evals = [y for x, y in evaluations.groupby(evaluations["classifier"])]
   for classifier_evel in classifier_evals:
     vectorizer_evals = [y for x, y in classifier_evel.groupby(classifier_evel["vectorizer"])]
@@ -33,7 +36,7 @@ def evaluationsToLatex(evaluations, increase_step):
     figures += "\\begin{table}[H]\n"
     first = True
     for df in vectorizer_evals:
-      classifier_name = df.iloc[0]["vectorizer"] + " " + df.iloc[0]["classifier"].replace(" ", "").translate(table)
+      classifier_name = df.iloc[0]["vectorizer"] + df.iloc[0]["classifier"].replace(" ", "").translate(table)
       if not first:
         figures += "\\hfill"
       first = False
@@ -43,8 +46,8 @@ def evaluationsToLatex(evaluations, increase_step):
       df = df.drop("training size", axis=1)
       figures += "\\parbox{.45\\linewidth}{\n\\centering\n"
       figures += df.round(3).to_latex(index=False)
-      figures += "\\caption{All iteration results for " + classifier_name + "}\n"
-      figures += "\\label{tab:" + classifier_name + "}\n"
+      figures += "\\caption{All iteration results for " + classifier_name + binary_string + "}\n"
+      figures += "\\label{tab:" + classifier_name + binary_suffix + "}\n"
       figures += "}\n"
       
     figures += "\end{table}\n\n"
@@ -64,7 +67,7 @@ def evaluationsToLatex(evaluations, increase_step):
       recall=row["recall"],
       f1=row["f1"]
     )
-  data += "}\classifierdata\n\n"
+  data += "}\classifierdata" + binary_suffix + "\n\n"
 
   figures += """\\begin{{figure}}[H]
     \centering
@@ -79,15 +82,15 @@ def evaluationsToLatex(evaluations, increase_step):
                 xticklabel style={{text width=1cm,align=center}},
                 xtick=data,
             ]
-            \\addplot table[x=Classifier,y=Precision]{{\classifierdata}};
-            \\addplot table[x=Classifier,y=Recall]{{\classifierdata}};
-            \\addplot table[x=Classifier,y=F1-score]{{\classifierdata}};
+            \\addplot table[x=Classifier,y=Precision]{{\classifierdata{binary_suffix}}};
+            \\addplot table[x=Classifier,y=Recall]{{\classifierdata{binary_suffix}}};
+            \\addplot table[x=Classifier,y=F1-score]{{\classifierdata{binary_suffix}}};
             \legend{{Precision, Recall, F1-score}}
         \end{{axis}}
     \end{{tikzpicture}}
-    \caption{{Metrics per classifier for all labelled emails}}
-    \label{{fig:classifier_metrics}}
-\end{{figure}}\n\n""".format(classifier_names=",".join(classifier_names))
+    \caption{{Metrics per classifier for all labelled emails{binary_string}}}
+    \label{{fig:classifier_metrics{binary_suffix}}}
+\end{{figure}}\n\n""".format(classifier_names=",".join(classifier_names), binary_suffix=binary_suffix, binary_string=binary_string)
 
   currentRow = ""
   combinations = []
@@ -97,7 +100,7 @@ def evaluationsToLatex(evaluations, increase_step):
       combinations.append(name)
     if currentRow != name:
       if currentRow != "":
-        data += "}}\iterdata{name}\n\n".format(name=currentRow)
+        data += "}}\iterdata{name}{binary_suffix}\n\n".format(name=currentRow, binary_suffix=binary_suffix)
       data += "\pgfplotstableread[row sep=\\\\,col sep=&]{\n"
       data += "    Size & Precision & Recall & F1-score \\\\\n"
       currentRow = name
@@ -109,7 +112,7 @@ def evaluationsToLatex(evaluations, increase_step):
       f1=row["f1"]
     )
 
-  data += "}}\iterdata{name}\n\n".format(name=name)
+  data += "}}\iterdata{name}{binary_suffix}\n\n".format(name=name, binary_suffix=binary_suffix)
   print(combinations)
   figure_sizes = "{{{sizes}}}".format(sizes=",".join(str(item) for item in [*range(increase_step, max, increase_step)]))
   for combination in combinations:
@@ -128,20 +131,20 @@ def evaluationsToLatex(evaluations, increase_step):
                 xtick=data,
                 ymax=.6
             ]
-            \\addplot table[x=Size,y=Precision]{{\iterdata{combination}}};
-            \\addplot table[x=Size,y=Recall]{{\iterdata{combination}}};
-            \\addplot table[x=Size,y=F1-score]{{\iterdata{combination}}};
+            \\addplot table[x=Size,y=Precision]{{\iterdata{combination}{binary_suffix}}};
+            \\addplot table[x=Size,y=Recall]{{\iterdata{combination}{binary_suffix}}};
+            \\addplot table[x=Size,y=F1-score]{{\iterdata{combination}{binary_suffix}}};
             \legend{{Precision, Recall, F1-score}}
         \end{{axis}}
     \end{{tikzpicture}}
-    \caption{{Metrics per iteration for {combination_fancy}}}
-    \label{{fig:iteration_metrics_{combination}}}
-\end{{figure}}\n\n""".format(sizes=figure_sizes, combination=combination, combination_fancy=re.sub(r"(\w)([A-Z])", r"\1 \2", combination))
+    \caption{{Metrics per iteration for {combination_fancy}{binary_string}}}
+    \label{{fig:iteration_metrics_{combination}{binary_suffix}}}
+\end{{figure}}\n\n""".format(sizes=figure_sizes, combination=combination, combination_fancy=re.sub(r"(\w)([A-Z])", r"\1 \2", combination), binary_suffix=binary_suffix, binary_string=binary_string)
 
-  data_file = open("latex/data.latex", "w")
+  data_file = open("latex/data" + binary_suffix + ".latex", "w")
   data_file.write(data)
   data_file.close()
-  figures_file = open("latex/figures.latex", "w")
+  figures_file = open("latex/figures" + binary_suffix + ".latex", "w")
   figures_file.write(figures)
   figures_file.close()
 
