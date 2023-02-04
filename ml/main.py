@@ -221,8 +221,8 @@ def batch_grid_train(f_train, l_train, f_test, l_test, classifier, increase_step
 
         # clf.fit(x_sub, y_sub)
 
-        # suffix = "_binary" if binary else ""
-        # path = "models/" + name + "_size_" + str(subset_size) + suffix + ".joblib"
+        suffix = "_binary" if binary else ""
+        path = "models/" + name + "_size_" + str(subset_size) + suffix + ".joblib"
         # dump(clf, path)
         clf = load(path)
 

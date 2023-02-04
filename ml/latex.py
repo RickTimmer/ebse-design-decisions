@@ -24,7 +24,7 @@ def evaluationsToLatex(evaluations, increase_step, binary):
   figures = ""
   table = str.maketrans('', '', string.ascii_lowercase)
 
-  binary_suffix = "_binary" if binary else ""
+  binary_suffix = "Binary" if binary else ""
   binary_string = " (binary)" if binary else ""
 
   classifier_evals = [y for x, y in evaluations.groupby(evaluations["classifier"])]
