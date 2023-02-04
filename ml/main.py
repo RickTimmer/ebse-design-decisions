@@ -90,10 +90,10 @@ def evaluate_model(model, x_test, y_true, name):
     for feature in x_test:
         y_pred.append(model.predict(feature)[0])
 
-    # cm = confusion_matrix(y_true, y_pred, labels=model.classes_)
-    # disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
-    # disp.plot()
-    # plt.savefig("confusion/" + name + ".png")
+    cm = confusion_matrix(y_true, y_pred, labels=model.classes_)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+    disp.plot()
+    plt.savefig("confusion/" + name + ".png")
 
     return (
         precision_score(y_true, y_pred, average="macro"),
@@ -200,7 +200,7 @@ def batch_grid_train(f_train, l_train, f_test, l_test, classifier, increase_step
 
         progress.set_description(f"Training approximate size of {subset_size}")
 
-        # # # get subset of approximately given size
+        # # get subset of approximately given size
         ix_sub = contextual_resample_comp(training_pp, subset_size)
         # x_sub, y_sub = f_train[ix_sub], l_train[ix_sub]
         # sub_pp = training_pp.iloc[ix_sub]
@@ -217,12 +217,12 @@ def batch_grid_train(f_train, l_train, f_test, l_test, classifier, increase_step
         #     splits.append((train_index, test_index))
 
         # # apply GridSearchCV, internally applies folding like defined above for validation
-        # clf = GridSearchCV(classifier, parameters, cv=splits)
+        # clf = GridSearchCV(classifier, parameters, scoring="f1_weighted", cv=splits)
 
         # clf.fit(x_sub, y_sub)
 
-        suffix = "_binary" if binary else ""
-        path = "models/" + name + "_size_" + str(subset_size) + suffix + ".joblib"
+        # suffix = "_binary" if binary else ""
+        # path = "models/" + name + "_size_" + str(subset_size) + suffix + ".joblib"
         # dump(clf, path)
         clf = load(path)
 
@@ -257,7 +257,7 @@ def main():
 
     l_train, l_test = training_df["LABEL"], testing_df["LABEL"]
 
-    increase_step = 2000
+    increase_step = 100
     kfold_splits = 5
 
     split = Split(training=training_df["ORIGINAL_INDEX"], testing=testing_df["ORIGINAL_INDEX"])
@@ -278,22 +278,31 @@ def main():
     classifiers = [
         {"classifier": ComplementNB(), "name": "Complement Naive Bayes", "short_name": "CNB",
          "parameters": {
-             "alpha": [0.5, 1.0]
+             "alpha": [0.1],
+             "norm": [False]
          }
         },
         {"classifier": DecisionTreeClassifier(), "name": "Decision Tree", "short_name": "DT",
          "parameters": {
-             "min_samples_split": [i for i in range(2, 7)]
+            "criterion": ["log_loss"],
+            "splitter": ["best"],
+            "max_features": [None],
+            "class_weight": [None]
          }
         },
         {"classifier": RandomForestClassifier(), "name": "Random Forest", "short_name": "RF",
          "parameters": {
-             "n_estimators": [i for i in range(1, 100, 10)]
+            "n_estimators": [120],
+            "criterion": ["log_loss"],
+            "max_features": [None],
+            "class_weight": ["balanced_subsample"]
          }
         },
         {"classifier": LinearSVC(), "name": "Linear Support Vector Classification", "short_name": "LSV",
          "parameters": {
-             "max_iter": [i for i in range(100, 2000, 100)]
+            "penalty": ["l2"],
+            "loss": ["hinge"],
+            "dual": [True]
          }
         }
     ]
